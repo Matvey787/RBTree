@@ -1,3 +1,5 @@
+#include <gtest/gtest.h>
+
 #ifndef RBT_HPP
 #define RBT_HPP
 
@@ -19,70 +21,189 @@ private:
     Node *right_;
 
 public:
-    Node(KeyT key, color_t color = color_t::RED, Node *parent = nullptr, Node *left = nullptr, Node *right = nullptr)
-        : key_(key), color_(color), parent_(parent), left_(left), right_(right) {}
+    Node(KeyT key,
+         color_t color = color_t::RED,
+         Node *parent = nullptr,
+         Node *left = nullptr,
+         Node *right = nullptr) : 
+         key_(key),
+         color_(color),
+         parent_(parent),
+         left_(left),
+         right_(right) {}
 
     ~Node()
     {
         delete left_;
         delete right_;
     }
-    
+    KeyT key() const { return key_; }
+    color_t color() const { return color_; }
     template <typename, typename>
-    friend class SearchTree;
+    friend class RBTree;
+    
+    // only for GTests
+    const Node* left() const { return left_; }
+    const Node* right() const { return right_; }
+    const Node* parent() const { return parent_; }
 };
 
 
 template <typename KeyT, typename Comp = std::less<KeyT>>
-class SearchTree {
+class RBTree {
     Node<KeyT> *top_ = nullptr;
 
-    void balance(Node<KeyT> *node);
-    void gdumpNode(std::ofstream &ofs, Node<KeyT> *node) const;
-    void LLRot(Node<KeyT> *node);
-    void RRRot(Node<KeyT> *node);
-    void BSTErase(KeyT key);
+    void balance    (Node<KeyT> *node);
+    void gdumpNode  (std::ofstream &ofs, Node<KeyT> *node) const;
+    void LLRot      (Node<KeyT> *node);
+    void RRRot      (Node<KeyT> *node);
+    void BSTErase   (KeyT key);
     Node<KeyT>* findMinInSubtree(Node<KeyT> *subRoot) const;
 
 public:
-    Node<KeyT>* successor(Node<KeyT>* node) const {
-        if (!node) return nullptr;
-
-        if (node->right_) {
-            Node<KeyT>* cur = node->right_;
-            while (cur->left_) cur = cur->left_;
-            return cur;
-        }
-
-        Node<KeyT>* cur = node;
-        Node<KeyT>* p = cur->parent_;
-        while (p && cur == p->right_) {
-            cur = p;
-            p = p->parent_;
-        }
-        return p;
-    }
+    
     
     using iterator = Node<KeyT>*;
+    iterator successor(Node<KeyT>* node) const;
     iterator lower_bound(KeyT key) const;
     iterator upper_bound(KeyT key) const;
-    int distance(iterator fst, iterator snd) const;
 
-    void insert(KeyT key);
-    void erase(KeyT key);
-    void gdump() const;
+    void insert (KeyT key);
+    void erase  (KeyT key);
+    void gdump  () const;
 };
 
+
+// --------------------------------------- балансировка ---------------------------------------
+
+
 template <typename KeyT, typename Comp>
-void SearchTree<KeyT, Comp>::insert(KeyT key)
+void RBTree<KeyT, Comp>::LLRot(Node<KeyT> *node)
 {
-    // std::cout << "here1" << std::endl;
-    if (!top_) {
-        std::cout << "top created" << std::endl;
+    Node<KeyT> *p = node->parent_;
+    Node<KeyT> *g = p->parent_;
+
+    if (g->parent_)
+    {
+        if (g == g->parent_->left_)
+            g->parent_->left_ = p;
+        else
+            g->parent_->right_ = p;
+    }
+    else
+    {
+        top_ = p;
+    }
+    p->parent_ = g->parent_;
+    g->left_ = p->right_;
+    g->parent_ = p;
+    p->right_ = g;
+    std::swap(p->color_, g->color_);
+}
+
+template <typename KeyT, typename Comp>
+void RBTree<KeyT, Comp>::RRRot(Node<KeyT> *node)
+{
+    Node<KeyT> *p = node->parent_;
+    Node<KeyT> *g = p->parent_;
+    if (g->parent_)
+    {
+        if (g == g->parent_->left_)
+            g->parent_->left_ = p;
+        else
+            g->parent_->right_ = p;
+    }
+    else
+    {
+        top_ = p;
+    }
+    p->parent_ = g->parent_;
+    g->right_ = p->left_;
+    p->left_ = g;
+    g->parent_ = p;
+    std::swap(p->color_, g->color_);
+}
+
+template <typename KeyT, typename Comp>
+void RBTree<KeyT, Comp>::balance(Node<KeyT> *node)
+{
+    Node<KeyT> *p = node->parent_; // parent
+    if (!p) return;
+    if (p->color_ == color_t::BLACK) return;
+
+    Node<KeyT> *g = p->parent_; // grandparent
+
+    Node<KeyT> *u = nullptr;
+
+    if (g->left_ != p)
+        u = g->left_; // uncle
+    else
+        u = g->right_; // uncle
+
+    if (u && u->color_ == color_t::RED) // случай, если дядя красный
+    {
+        p->color_ = color_t::BLACK;
+        u->color_ = color_t::BLACK;
+
+        if (g->parent_)
+            g->color_ = color_t::RED;
+        else
+            g->color_ = color_t::BLACK;
+
+        balance(g);
+    }
+
+    else if (!u || u->color_ == color_t::BLACK) // случай, если дядя черный
+    {
+        if ((p == g->left_ && node == p->left_)) // отец левый, сын левый
+        {
+            LLRot(node);
+        }
+        else if (p == g->right_ && node == p->right_) // отец правый, сын правый
+        {
+            
+            RRRot(node);
+        }
+        else if (p == g->left_ && node == p->right_) // отец левый, сын правый
+        {
+            node->parent_ = g;
+            g->left_ = node;
+
+            p->right_ = node->left_;
+
+            p->parent_ = node;
+            node->left_ = p;
+
+            LLRot(p);
+
+        }
+        else if (p == g->right_ && node == p->left_) // отец правый, сын левый
+        {
+            node->parent_ = g;
+            g->right_ = node;
+
+            p->left_ = node->right_;
+
+            p->parent_ = node;
+            node->right_ = p;
+
+            RRRot(p);
+        }
+    }
+}
+
+
+
+// --------------------------------------- вставка ---------------------------------------
+
+template <typename KeyT, typename Comp>
+void RBTree<KeyT, Comp>::insert(KeyT key)
+{
+    if (!top_)
+    {
         top_ = new Node<KeyT>{key, color_t::BLACK};
         return;
     }
-    // std::cout << "here2" << std::endl;
 
     Node<KeyT> *current = top_;
     Node<KeyT> *parent = nullptr;
@@ -97,14 +218,10 @@ void SearchTree<KeyT, Comp>::insert(KeyT key)
             current = current->right_;
     }
 
-    // std::cout << "here3" << std::endl;
     if (Comp{}(key, parent->key_))
     {
-        // std::cout << "here4" << parent << std::endl;
         parent->left_ = new Node<KeyT>{key, color_t::RED, parent};
-        std::cout << "here5" << parent << std::endl;
         balance(parent->left_);
-        //  std::cout << "here6" << parent << std::endl;
     }
     else
     {
@@ -113,8 +230,12 @@ void SearchTree<KeyT, Comp>::insert(KeyT key)
     }
 }
 
+
+
+// --------------------------------------- удаление ---------------------------------------
+
 template <typename KeyT, typename Comp>
-Node<KeyT>* SearchTree<KeyT, Comp>::findMinInSubtree(Node<KeyT> *subRoot) const
+Node<KeyT>* RBTree<KeyT, Comp>::findMinInSubtree(Node<KeyT> *subRoot) const
 {
     Node<KeyT> *minNode = subRoot;
 
@@ -127,7 +248,7 @@ Node<KeyT>* SearchTree<KeyT, Comp>::findMinInSubtree(Node<KeyT> *subRoot) const
 }
 
 template <typename KeyT, typename Comp>
-void SearchTree<KeyT, Comp>::BSTErase(KeyT key)
+void RBTree<KeyT, Comp>::BSTErase(KeyT key)
 {
     
     auto replace = [this](Node<KeyT>* oldNode, Node<KeyT>* newNode) {
@@ -147,7 +268,7 @@ void SearchTree<KeyT, Comp>::BSTErase(KeyT key)
             else
             {
                 oldNode->parent_->right_ = newNode;
-                std::cout << "here1111" << std::endl;
+                
             }
         }
         oldNode->left_ = nullptr;
@@ -192,9 +313,9 @@ void SearchTree<KeyT, Comp>::BSTErase(KeyT key)
     }
     else if (deleted->right_) // есть только правый потомок
     {
-        std::cout << "Удаляется элемент с правым потомком " << deleted->key_ << std::endl;
+        
         replace(deleted, deleted->right_);
-        std::cout << "удалён" << std::endl;
+        
     }
     else // есть только левый потомок
     {
@@ -203,124 +324,18 @@ void SearchTree<KeyT, Comp>::BSTErase(KeyT key)
 }
 
 template <typename KeyT, typename Comp>
-void SearchTree<KeyT, Comp>::erase(KeyT key)
+void RBTree<KeyT, Comp>::erase(KeyT key)
 {
     BSTErase(key);
 }
 
-template <typename KeyT, typename Comp>
-void SearchTree<KeyT, Comp>::LLRot(Node<KeyT> *node)
-{
-    Node<KeyT> *p = node->parent_;
-    Node<KeyT> *g = p->parent_;
 
-    if (g->parent_)
-    {
-        if (g == g->parent_->left_)
-            g->parent_->left_ = p;
-        else
-            g->parent_->right_ = p;
-            
-        g->left_ = p->right_;
-        g->parent_ = p;
-        p->right_ = g;
 
-        std::swap(p->color_, g->color_);
-    }
-}
+// --------------------------------------- визуализация ---------------------------------------
 
 template <typename KeyT, typename Comp>
-void SearchTree<KeyT, Comp>::RRRot(Node<KeyT> *node)
+void RBTree<KeyT, Comp>::gdump() const
 {
-    Node<KeyT> *p = node->parent_;
-    Node<KeyT> *g = p->parent_;
-
-    if (g->parent_)
-    {
-        if (g == g->parent_->left_)
-            g->parent_->left_ = p;
-        else
-            g->parent_->right_ = p;
-            
-        g->right_ = p->left_;
-        g->parent_ = p;
-        p->left_ = g;
-        std::swap(p->color_, g->color_);
-    }
-}
-
-template <typename KeyT, typename Comp>
-void SearchTree<KeyT, Comp>::balance(Node<KeyT> *node)
-{
-    Node<KeyT> *p = node->parent_; // parent
-    if (!p) return;
-    if (p->color_ == color_t::BLACK) return;
-
-    Node<KeyT> *g = p->parent_; // grandparent
-
-    Node<KeyT> *u = nullptr;
-
-    if (g->left_ != p)
-        u = g->left_; // uncle
-    else
-        u = g->right_; // uncle
-
-    if (u && u->color_ == color_t::RED)
-    {
-        p->color_ = color_t::BLACK;
-        u->color_ = color_t::BLACK;
-
-        if (g->parent_)
-            g->color_ = color_t::RED;
-        else
-            g->color_ = color_t::BLACK;
-
-        std::cout << "here7" << g << std::endl;
-        balance(g);
-    }
-
-    else if (!u || u->color_ == color_t::BLACK)
-    {
-        if ((p == g->left_ && node == p->left_))
-        {
-            LLRot(node);
-        }
-        else if (p == g->right_ && node == p->right_)
-        {
-            RRRot(node);
-        }
-        else if (p == g->left_ && node == p->right_)
-        {
-            node->parent_ = g;
-            g->left_ = node;
-
-            p->right_ = node->left_;
-
-            p->parent_ = node;
-            node->left_ = p;
-
-            LLRot(p);
-
-        }
-        else if (p == g->right_ && node == p->left_)
-        {
-            node->parent_ = g;
-            g->right_ = node;
-
-            p->left_ = node->right_;
-
-            p->parent_ = node;
-            node->right_ = p;
-
-            RRRot(p);
-        }
-    }
-}
-
-template <typename KeyT, typename Comp>
-void SearchTree<KeyT, Comp>::gdump() const
-{
-    std::cout << "графическое представление дерева" << std::endl;
     static int counter = 0;
     std::string graphviz_file = "graphviz/tree" + std::to_string(counter) + ".dot";
     std::ofstream ofs(graphviz_file);
@@ -330,8 +345,8 @@ void SearchTree<KeyT, Comp>::gdump() const
     gdumpNode(ofs, top_);
     ofs << "}\n";
     ofs.close();
-    std::cout << "графическое представление дерева" << std::endl;
 
+    // generate dot file
     std::string dot_cmd = "dot -Tsvg graphviz/tree" + std::to_string(counter) + ".dot -o graphviz/tree" + std::to_string(counter + 1) + ".svg";
     system(dot_cmd.c_str());
     std::string rm_cmd = "rm graphviz/tree" + std::to_string(counter) + ".dot";
@@ -340,18 +355,15 @@ void SearchTree<KeyT, Comp>::gdump() const
 }
 
 template <typename KeyT, typename Comp>
-void SearchTree<KeyT, Comp>::gdumpNode(std::ofstream &ofs, Node<KeyT> *node) const
+void RBTree<KeyT, Comp>::gdumpNode(std::ofstream &ofs, Node<KeyT> *node) const
 {
     if (!node) return;
-
-    std::cout << "Print node " << node->key_ << std::endl;
 
     std::string color_attr = (node->color_ == color_t::RED) ? 
         "fillcolor=lightcoral, fontcolor=white" : 
         "fillcolor=lightgray, fontcolor=black";
 
     ofs << "    \"" << node << "\" [label=\"" << node->key_ << "\", " << color_attr << "];\n";
-    std::cout << "gdumpNode    " << (node->parent_ ? node->parent_->key_ : -1) << std::endl;
     if (node->left_) {
         ofs << "    \"" << node << "\" -> \"" << node->left_ << "\";\n";
         gdumpNode(ofs, node->left_);
@@ -361,16 +373,20 @@ void SearchTree<KeyT, Comp>::gdumpNode(std::ofstream &ofs, Node<KeyT> *node) con
         gdumpNode(ofs, node->right_);
     }
 
-    std::cout << "here2222" << std::endl;
 }
 
+
+
+// --------------------------------------- поиск ---------------------------------------
+
 template <typename KeyT, typename Comp>
-typename SearchTree<KeyT, Comp>::iterator 
-SearchTree<KeyT, Comp>::lower_bound(KeyT key) const {
+typename RBTree<KeyT, Comp>::iterator 
+RBTree<KeyT, Comp>::lower_bound(KeyT key) const {
     Node<KeyT>* res = nullptr;
     Node<KeyT>* cur = top_;
     while (cur) {
-        if (!Comp{}(cur->key_, key)) { // cur->key_ >= key
+        if (!Comp{}(cur->key_, key)) // cur->key_ >= key
+        { 
             res = cur;
             cur = cur->left_;
         } else {
@@ -381,12 +397,13 @@ SearchTree<KeyT, Comp>::lower_bound(KeyT key) const {
 }
 
 template <typename KeyT, typename Comp>
-typename SearchTree<KeyT, Comp>::iterator 
-SearchTree<KeyT, Comp>::upper_bound(KeyT key) const {
+typename RBTree<KeyT, Comp>::iterator 
+RBTree<KeyT, Comp>::upper_bound(KeyT key) const {
     Node<KeyT>* res = nullptr;
     Node<KeyT>* cur = top_;
     while (cur) {
-        if (Comp{}(key, cur->key_)) { // cur->key_ > key
+        if (Comp{}(key, cur->key_)) // cur->key_ > key
+        { 
             res = cur;
             cur = cur->left_;
         } else {
@@ -396,6 +413,29 @@ SearchTree<KeyT, Comp>::upper_bound(KeyT key) const {
     return res;
 }
 
+// поиск следующего с более большим ключом
+template <typename KeyT, typename Comp>
+typename RBTree<KeyT, Comp>::iterator
+RBTree<KeyT, Comp>::successor(Node<KeyT>* node) const 
+{
+    if (!node) return nullptr;
+
+    if (node->right_)
+    {
+        Node<KeyT>* cur = node->right_;
+        while (cur->left_) cur = cur->left_;
+        return cur;
+    }
+
+    Node<KeyT>* cur = node;
+    Node<KeyT>* p = cur->parent_;
+    while (p && cur == p->right_)
+    {
+        cur = p;
+        p = p->parent_;
+    }
+    return p;
+}
 
 template <typename C>
 int mydistance(const C& tree, typename C::iterator fst, typename C::iterator snd) {
@@ -413,9 +453,10 @@ int range_query(const C& s, T fst, T snd)
 {
     using itt = typename C::iterator;
     itt start = s.lower_bound(fst);
-    // first not less then fst
+    
     itt fin = s.upper_bound(snd);
-    // first greater then snd
+    
+    
     return mydistance(s, start, fin); // std::distance для set
 }
 

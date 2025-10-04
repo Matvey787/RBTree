@@ -5,13 +5,24 @@ int main()
 {
     try
     {
-        RBT::SearchTree<int> tree;
-        // tree.insert(50);
+        RBT::RBTree<int> tree;
+        // tree.insert(10);
+        // tree.insert(20);
+        // tree.gdump();
         // tree.insert(30);
         // tree.gdump();
-        // tree.insert(70);
-        // tree.insert(20);
+        // tree.insert(45);
+        // tree.gdump();
+        // tree.insert(8);
         // tree.insert(40);
+        // tree.insert(100);
+        // tree.insert(12);
+        // tree.insert(15);
+        // tree.insert(25);
+        // tree.insert(1000);
+        // tree.insert(10000);
+        // tree.gdump();
+        // 
 
         // tree.gdump();
         // tree.insert(45);
@@ -27,29 +38,29 @@ int main()
 
         // tree.gdump();
 
-        std::vector<int> results;
-        char command;
-        do {
-            std::cin >> command;
-            if (command == 'k')
-            {
-                int key = 0;
-                std::cin >> key;
+    std::vector<int> results;
+    char command;
+    while (std::cin >> command) {
+        if (command == 'k') {
+            int key;
+            if (std::cin >> key) {
                 tree.insert(key);
             }
-            else if (command == 'q')
-            {
-                int key1 = 0; 
-                int key2 = 0;
-                std::cin >> key1 >> key2;
+        } else if (command == 'q') {
+            int key1 = 0;
+            int key2 = 0;
+            if (std::cin >> key1 >> key2) {
                 results.push_back(RBT::range_query(tree, key1, key2));
-            }
-            // tree.erase(30);
-        } while (command != 'o');
 
-        for (int result : results) {
-            std::cout << result << " " << std::endl;
+            
+            }
         }
+    }
+    for (size_t i = 0; i < results.size(); ++i)
+    {
+        std::cout << results[i] << (i == results.size() - 1 ? "" : " ");
+    }
+    std::cout << std::endl;
     }
 
     catch (const std::exception &e)
