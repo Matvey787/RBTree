@@ -70,6 +70,7 @@ public:
 
     void insert (KeyT key);
     void erase  (KeyT key);
+    bool exists (KeyT key) const;
     void gdump  () const;
 };
 
@@ -205,6 +206,8 @@ void RBTree<KeyT, Comp>::insert(KeyT key)
         return;
     }
 
+    if (exists(key)) return;
+
     Node<KeyT> *current = top_;
     Node<KeyT> *parent = nullptr;
 
@@ -300,7 +303,7 @@ void RBTree<KeyT, Comp>::BSTErase(KeyT key)
     }
     else if (deleted->right_ && deleted->left_)
     {
-        Node<KeyT> *inorderedSuccessor = findMinInSubtree(deleted->right_);
+        Node<KeyT> *inorderedSuccessor =  successor(deleted);
 
         if (!inorderedSuccessor) // минимальный элемент в правом поддереве не найден
         {
@@ -441,7 +444,9 @@ template <typename C>
 int mydistance(const C& tree, typename C::iterator fst, typename C::iterator snd) {
     int cnt = 0;
     auto cur = fst;
-    while (cur && cur != snd) {
+    while (cur && cur != snd)
+    {
+        std::cout << cur->key() << " ";
         ++cnt;
         cur = tree.successor(cur);
     }
@@ -460,8 +465,20 @@ int range_query(const C& s, T fst, T snd)
     return mydistance(s, start, fin); // std::distance для set
 }
 
+template <typename KeyT, typename Comp>
+bool RBTree<KeyT, Comp>::exists(KeyT key) const {
+    Node<KeyT>* cur = top_;
+    while (cur) {
+        if (cur->key_ == key) return true;
+        if (Comp{}(key, cur->key_)) {
+            cur = cur->left_;
+        } else {
+            cur = cur->right_;
+        }
+    }
+    return false;
+}
+
 } // namespace RBT
-
-
 
 #endif // RBT_HPP

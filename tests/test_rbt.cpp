@@ -83,10 +83,91 @@ TEST(RBT_BoundsTest, LowerBoundAndUpperBound) {
     EXPECT_EQ(ub->key(), 30);
 }
 
-TEST(RBT_RangeQueryTest, CountElementsInRange) {
+TEST(RBT_RangeQueryTest, RangeQueryTest1) {
     RBTree<int> tree;
     for (int x : {10, 20, 30, 40, 50}) tree.insert(x);
 
     int cnt = range_query(tree, 15, 45);
-    EXPECT_EQ(cnt, 3); // 20,30,40
+    EXPECT_EQ(cnt, 3);
+}
+
+// Тест с диапазоном внутри элементов
+TEST(RBT_RangeQueryTest, RangeQueryWithin) {
+    RBTree<int> tree;
+    for (int x : {10, 20, 30, 40, 50}) tree.insert(x);
+
+    int cnt = range_query(tree, 15, 45);
+    EXPECT_EQ(cnt, 3);
+}
+
+// Тест с диапазоном, включающим все элементы
+TEST(RBT_RangeQueryTest, RangeQueryFullRange) {
+    RBTree<int> tree;
+    for (int x : {10, 20, 30, 40, 50}) tree.insert(x);
+
+    int cnt = range_query(tree, 0, 100);
+    EXPECT_EQ(cnt, 5);
+}
+
+// Тест с диапазоном меньше минимального элемента
+TEST(RBT_RangeQueryTest, RangeQueryBelowMin) {
+    RBTree<int> tree;
+    for (int x : {10, 20, 30, 40, 50}) tree.insert(x);
+
+    int cnt = range_query(tree, 0, 5);
+    EXPECT_EQ(cnt, 0);
+}
+
+// Тест с диапазоном больше максимального элемента
+TEST(RBT_RangeQueryTest, RangeQueryAboveMax) {
+    RBTree<int> tree;
+    for (int x : {10, 20, 30, 40, 50}) tree.insert(x);
+
+    int cnt = range_query(tree, 55, 100);
+    EXPECT_EQ(cnt, 0);
+}
+
+// Тест с диапазоном равным существующему элементу
+TEST(RBT_RangeQueryTest, RangeQuerySingleElement) {
+    RBTree<int> tree;
+    for (int x : {10, 20, 30, 40, 50}) tree.insert(x);
+
+    int cnt = range_query(tree, 30, 30);
+    EXPECT_EQ(cnt, 1);
+}
+
+// Тест с диапазоном из одного элемента, отсутствующего в дереве
+TEST(RBT_RangeQueryTest, RangeQuerySingleAbsentElement) {
+    RBTree<int> tree;
+    for (int x : {10, 20, 30, 40, 50}) tree.insert(x);
+
+    int cnt = range_query(tree, 35, 35);
+    EXPECT_EQ(cnt, 0);
+}
+
+// Тест с перевернутым диапазоном (fst > snd)
+TEST(RBT_RangeQueryTest, RangeQueryReversedRange) {
+    RBTree<int> tree;
+    for (int x : {10, 20, 30, 40, 50}) tree.insert(x);
+
+    int cnt = range_query(tree, 45, 15);
+    EXPECT_EQ(cnt, 1); // от 45 и до конца
+}
+
+// Тест с дубликатами элементов
+TEST(RBT_RangeQueryTest, RangeQueryWithDuplicates) {
+    RBTree<int> tree;
+    for (int x : {10, 20, 20, 30, 30, 30, 40, 50}) tree.insert(x);
+
+    int cnt = range_query(tree, 20, 30);
+    EXPECT_EQ(cnt, 2);
+}
+
+// Тест с диапазоном, включающим все дубликаты одного значения
+TEST(RBT_RangeQueryTest, RangeQuerySingleDuplicateValue) {
+    RBTree<int> tree;
+    for (int x : {10, 10, 10, 20, 30}) tree.insert(x);
+
+    int cnt = range_query(tree, 10, 10);
+    EXPECT_EQ(cnt, 1);
 }
