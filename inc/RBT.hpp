@@ -446,7 +446,6 @@ int mydistance(const C& tree, typename C::iterator fst, typename C::iterator snd
     auto cur = fst;
     while (cur && cur != snd)
     {
-        std::cout << cur->key() << " ";
         ++cnt;
         cur = tree.successor(cur);
     }
