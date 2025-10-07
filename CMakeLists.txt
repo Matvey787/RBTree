@@ -6,7 +6,7 @@
 # g++ -g -O2 -fno-omit-frame-pointer your_program.cpp -o your_program
 # -DCMAKE_BUILD_TYPE=RelWithDebInfo
 
-cmake_minimum_required(VERSION 3.30)
+cmake_minimum_required(VERSION 3.11)
 project(LIRS_Cache CXX)
 
 set(CMAKE_CXX_STANDARD 20)
