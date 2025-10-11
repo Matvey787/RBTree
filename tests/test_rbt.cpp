@@ -151,7 +151,7 @@ TEST(RBT_RangeQueryTest, RangeQueryReversedRange) {
     for (int x : {10, 20, 30, 40, 50}) tree.insert(x);
 
     int cnt = range_query(tree, 45, 15);
-    EXPECT_EQ(cnt, 1); // от 45 и до конца
+    EXPECT_EQ(cnt, 0);
 }
 
 // Тест с дубликатами элементов

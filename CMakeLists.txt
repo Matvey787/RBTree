@@ -22,6 +22,12 @@ set(COMMON_SOURCE_FILES
 add_executable(out ${COMMON_SOURCE_FILES})
 target_include_directories(out PRIVATE ${CMAKE_SOURCE_DIR}/inc)
 
+add_executable(generateTest src/generateTest.cpp)
+
+add_executable(set ${COMMON_SOURCE_FILES})
+target_compile_definitions(set PRIVATE SET_M)
+
+
 
 add_executable(rbt_tests tests/test_rbt.cpp)
 target_link_libraries(rbt_tests GTest::gtest GTest::gtest_main)

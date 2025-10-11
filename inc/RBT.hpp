@@ -77,51 +77,56 @@ public:
 
 // --------------------------------------- балансировка ---------------------------------------
 
-
 template <typename KeyT, typename Comp>
 void RBTree<KeyT, Comp>::LLRot(Node<KeyT> *node)
 {
     Node<KeyT> *p = node->parent_;
     Node<KeyT> *g = p->parent_;
 
-    if (g->parent_)
-    {
+    if (g->parent_) {
         if (g == g->parent_->left_)
             g->parent_->left_ = p;
         else
             g->parent_->right_ = p;
-    }
-    else
-    {
+    } else {
         top_ = p;
     }
+
     p->parent_ = g->parent_;
+
     g->left_ = p->right_;
-    g->parent_ = p;
+    if (p->right_) p->right_->parent_ = g;
+
     p->right_ = g;
+    g->parent_ = p;
+
     std::swap(p->color_, g->color_);
 }
+
 
 template <typename KeyT, typename Comp>
 void RBTree<KeyT, Comp>::RRRot(Node<KeyT> *node)
 {
     Node<KeyT> *p = node->parent_;
     Node<KeyT> *g = p->parent_;
-    if (g->parent_)
-    {
+
+    if (g->parent_) {
         if (g == g->parent_->left_)
             g->parent_->left_ = p;
         else
             g->parent_->right_ = p;
-    }
-    else
-    {
+    } else {
         top_ = p;
     }
+
     p->parent_ = g->parent_;
+
     g->right_ = p->left_;
+    if (p->left_) p->left_->parent_ = g;
+
     p->left_ = g;
     g->parent_ = p;
+
     std::swap(p->color_, g->color_);
 }
 
@@ -165,18 +170,18 @@ void RBTree<KeyT, Comp>::balance(Node<KeyT> *node)
             
             RRRot(node);
         }
-        else if (p == g->left_ && node == p->right_) // отец левый, сын правый
+        else if (p == g->left_ && node == p->right_)
         {
             node->parent_ = g;
             g->left_ = node;
 
             p->right_ = node->left_;
+            if (node->left_) node->left_->parent_ = p;
 
             p->parent_ = node;
             node->left_ = p;
 
             LLRot(p);
-
         }
         else if (p == g->right_ && node == p->left_) // отец правый, сын левый
         {
@@ -184,6 +189,7 @@ void RBTree<KeyT, Comp>::balance(Node<KeyT> *node)
             g->right_ = node;
 
             p->left_ = node->right_;
+            if (node->right_) node->right_->parent_ = p;
 
             p->parent_ = node;
             node->right_ = p;
@@ -432,7 +438,7 @@ RBTree<KeyT, Comp>::successor(Node<KeyT>* node) const
 
     Node<KeyT>* cur = node;
     Node<KeyT>* p = cur->parent_;
-    while (p && cur == p->right_)
+    while (p && (cur == p->right_))
     {
         cur = p;
         p = p->parent_;
@@ -455,12 +461,15 @@ int mydistance(const C& tree, typename C::iterator fst, typename C::iterator snd
 template <typename C, typename T>
 int range_query(const C& s, T fst, T snd)
 {
+    if (fst > snd) return 0;
+
     using itt = typename C::iterator;
     itt start = s.lower_bound(fst);
     
     itt fin = s.upper_bound(snd);
-    
-    
+
+    // std::cout << "Range query [" << (start ? start->key() : -1) << ", " << (fin ? fin->key() : -1) << "]: " << std::endl;
+
     return mydistance(s, start, fin); // std::distance для set
 }
 
