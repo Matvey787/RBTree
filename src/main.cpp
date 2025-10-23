@@ -7,8 +7,10 @@
 
 #include <iostream>
 #include <vector>
+#include <limits>
 
-void getNumber(int* num1 = nullptr);
+template <typename T>
+bool getInput(T* var = nullptr, const std::string& warningMessage = "");
 
 int main()
 {
@@ -22,18 +24,18 @@ int main()
 
     std::vector<int> results;
     char command = 0;
-    while (std::cin >> command)
+    while (getInput(&command))
     {
         if (command == 'k') {
             int key = 0;
-            getNumber(&key);
+            getInput(&key, "need number");
             tree.insert(key);
 
         } else if (command == 'q') {
             int key1 = 0;
             int key2 = 0;
-            getNumber(&key1);
-            getNumber(&key2);
+            getInput(&key1, "need number");
+            getInput(&key2, "need number");
 
             #ifdef SET_M
                 if (key1 > key2)
@@ -49,6 +51,10 @@ int main()
                 size_t numOfNodes = RBT::range_query(tree, key1, key2);
                 results.push_back(numOfNodes);
             #endif
+        }
+        else
+        {
+            std::cout << "Input (k) - insert key; (q) - want to query\n";
         }
     }
     for (size_t i = 0; i < results.size(); ++i)
@@ -95,21 +101,35 @@ int main()
     return 0;
 }
 
-void getNumber(int* num1 = nullptr)
+template <typename T>
+bool getInput(T* var, const std::string& warningMessage)
 {
-    if (num1) std::cin >> *num1;
+    if (var) std::cin >> *var;
+    else throw std::invalid_argument("Invalid argument: var is null");
 
-    const size_t attempts = 3;
+    size_t attempts = 3;
     while (!std::cin.good())
     {
+        --attempts;
+
         if (attempts == 0)
         {
-            std::cerr << "Max attempts(3) reached. Exiting...\n";
+            std::cout << "Max attempts(3) reached. Exiting...\n";
             std::exit(1);
         }
-        std::cerr << "Invalid input! " << "Try again: \n";
+        std::cout << "Invalid input! " << "Try again";
+
+        if (!warningMessage.empty()) std::cout << " (" << warningMessage << ")";
+
+        std::cout << ":\n";
+
         std::cin.clear();
         std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
-        if (num1) std::cin >> *num1;
+
+        std::cin >> *var;
     }
+
+    std::cin.clear();
+    std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+    return true;
 }

@@ -34,7 +34,7 @@ public:
 
     ~Node() = default;
 
-    KeyT& key() const { return key_; }
+    const KeyT& key() const { return key_; }
     color_t color() const { return color_; }
     template <typename, typename>
     friend class RBTree;
