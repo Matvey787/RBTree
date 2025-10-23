@@ -1,10 +1,10 @@
-#include <gtest/gtest.h>
-
 #ifndef RBT_HPP
 #define RBT_HPP
 
+#include <gtest/gtest.h>
 #include <functional>
 #include <fstream>
+#include <stack>
 
 namespace RBT {
 
@@ -32,12 +32,9 @@ public:
          left_(left),
          right_(right) {}
 
-    ~Node()
-    {
-        delete left_;
-        delete right_;
-    }
-    KeyT key() const { return key_; }
+    ~Node() = default;
+
+    KeyT& key() const { return key_; }
     color_t color() const { return color_; }
     template <typename, typename>
     friend class RBTree;
@@ -57,11 +54,10 @@ class RBTree {
     void gdumpNode  (std::ofstream &ofs, Node<KeyT> *node) const;
     void LLRot      (Node<KeyT> *node);
     void RRRot      (Node<KeyT> *node);
-    void BSTErase   (KeyT key);
+    void BSTErase(const KeyT& key);
     Node<KeyT>* findMinInSubtree(Node<KeyT> *subRoot) const;
 
 public:
-    
     
     using iterator = Node<KeyT>*;
     iterator successor(Node<KeyT>* node) const;
@@ -71,7 +67,13 @@ public:
     void insert (KeyT key);
     void erase  (KeyT key);
     bool exists (KeyT key) const;
+    void clear  ();
     void gdump  () const;
+
+    ~RBTree()
+    {
+        clear();
+    }
 };
 
 
@@ -257,7 +259,7 @@ Node<KeyT>* RBTree<KeyT, Comp>::findMinInSubtree(Node<KeyT> *subRoot) const
 }
 
 template <typename KeyT, typename Comp>
-void RBTree<KeyT, Comp>::BSTErase(KeyT key)
+void RBTree<KeyT, Comp>::BSTErase(const KeyT& key)
 {
     
     auto replace = [this](Node<KeyT>* oldNode, Node<KeyT>* newNode) {
@@ -486,6 +488,28 @@ bool RBTree<KeyT, Comp>::exists(KeyT key) const {
     }
     return false;
 }
+
+// --------------------------------------- линейная очистка ---------------------------------------
+
+template <typename KeyT, typename Comp>
+void RBTree<KeyT, Comp>::clear()
+{
+    std::stack<RBTree::iterator> stack;
+    if(top_ != nullptr) stack.push(top_);
+
+    while(!stack.empty())
+    {
+        RBTree::iterator currNode = stack.top();
+        stack.pop();
+
+        if (currNode->left_ != nullptr) stack.push(currNode->left_);
+        if (currNode->right_ != nullptr) stack.push(currNode->right_);
+
+        delete currNode;
+    }
+
+}
+
 
 } // namespace RBT
 

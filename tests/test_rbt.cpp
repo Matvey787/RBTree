@@ -1,5 +1,6 @@
-#include <gtest/gtest.h>
 #include "RBT.hpp"
+#include <gtest/gtest.h>
+
 
 using namespace RBT;
 

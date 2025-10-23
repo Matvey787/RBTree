@@ -15,7 +15,7 @@ int main(int argc, char* argv[])
     std::ofstream file(fileWriteTo);
     if (!file)
     {
-        std::cerr << "Error opening file: " << fileWriteTo << std::endl;
+        std::cerr << "Error opening file: " << fileWriteTo << "\n";
         return 1;
     }
 

@@ -1,12 +1,14 @@
-#include <iostream>
-#include <vector>
-
 #ifdef SET_M
 #include <set>
 #include <iterator>
 #else
 #include "RBT.hpp"
 #endif
+
+#include <iostream>
+#include <vector>
+
+void getNumber(int* num1 = nullptr);
 
 int main()
 {
@@ -19,46 +21,46 @@ int main()
     #endif
 
     std::vector<int> results;
-    char command;
-    while (std::cin >> command) {
+    char command = 0;
+    while (std::cin >> command)
+    {
         if (command == 'k') {
-            int key;
-            if (std::cin >> key) {
-                tree.insert(key);
-                // tree.gdump();
-            }
+            int key = 0;
+            getNumber(&key);
+            tree.insert(key);
+
         } else if (command == 'q') {
             int key1 = 0;
             int key2 = 0;
-            if (std::cin >> key1 >> key2)
-            {
-                #ifdef SET_M
-                    if (key1 > key2)
-                    {
-                        results.push_back(0);
-                        continue;
-                    }
-                    auto it1 = tree.lower_bound(key1);
-                    auto it2 = tree.upper_bound(key2);
-                    size_t numOfNodes = std::distance(it1, it2);
-                    results.push_back(numOfNodes);
-                #else
-                    size_t numOfNodes = RBT::range_query(tree, key1, key2);
-                    results.push_back(numOfNodes);
-                #endif
-            }
+            getNumber(&key1);
+            getNumber(&key2);
+
+            #ifdef SET_M
+                if (key1 > key2)
+                {
+                    results.push_back(0);
+                    continue;
+                }
+                auto it1 = tree.lower_bound(key1);
+                auto it2 = tree.upper_bound(key2);
+                size_t numOfNodes = std::distance(it1, it2);
+                results.push_back(numOfNodes);
+            #else
+                size_t numOfNodes = RBT::range_query(tree, key1, key2);
+                results.push_back(numOfNodes);
+            #endif
         }
     }
     for (size_t i = 0; i < results.size(); ++i)
     {
         std::cout << results[i] << (i == results.size() - 1 ? "" : " ");
     }
-    std::cout << std::endl;
+    std::cout << "\n";
     }
 
     catch (const std::exception &e)
     {
-        std::cerr << "Error: " << e.what() << std::endl;
+        std::cerr << "Error: " << e.what() << "\n";
     }
 
     // tree.insert(10);
@@ -91,4 +93,23 @@ int main()
     // tree.gdump();
 
     return 0;
+}
+
+void getNumber(int* num1 = nullptr)
+{
+    if (num1) std::cin >> *num1;
+
+    const size_t attempts = 3;
+    while (!std::cin.good())
+    {
+        if (attempts == 0)
+        {
+            std::cerr << "Max attempts(3) reached. Exiting...\n";
+            std::exit(1);
+        }
+        std::cerr << "Invalid input! " << "Try again: \n";
+        std::cin.clear();
+        std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+        if (num1) std::cin >> *num1;
+    }
 }
