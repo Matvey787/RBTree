@@ -11,7 +11,7 @@ TEST(RBT_InsertTest, RootIsBlackAfterFirstInsert) {
     auto root = tree.lower_bound(10);
     ASSERT_NE(root, nullptr);
     EXPECT_EQ(root->key(), 10);
-    EXPECT_EQ(root->color(), color_t::BLACK); // Корень всегда чёрный
+    EXPECT_EQ(root->color(), color_t::BLACK); // Root always black
 }
 
 TEST(RBT_InsertTest, InsertMaintainsBSTProperty) {
@@ -92,7 +92,6 @@ TEST(RBT_RangeQueryTest, RangeQueryTest1) {
     EXPECT_EQ(cnt, 3);
 }
 
-// Тест с диапазоном внутри элементов
 TEST(RBT_RangeQueryTest, RangeQueryWithin) {
     RBTree<int> tree;
     for (int x : {10, 20, 30, 40, 50}) tree.insert(x);
@@ -101,7 +100,6 @@ TEST(RBT_RangeQueryTest, RangeQueryWithin) {
     EXPECT_EQ(cnt, 3);
 }
 
-// Тест с диапазоном, включающим все элементы
 TEST(RBT_RangeQueryTest, RangeQueryFullRange) {
     RBTree<int> tree;
     for (int x : {10, 20, 30, 40, 50}) tree.insert(x);
@@ -110,7 +108,6 @@ TEST(RBT_RangeQueryTest, RangeQueryFullRange) {
     EXPECT_EQ(cnt, 5);
 }
 
-// Тест с диапазоном меньше минимального элемента
 TEST(RBT_RangeQueryTest, RangeQueryBelowMin) {
     RBTree<int> tree;
     for (int x : {10, 20, 30, 40, 50}) tree.insert(x);
@@ -119,7 +116,6 @@ TEST(RBT_RangeQueryTest, RangeQueryBelowMin) {
     EXPECT_EQ(cnt, 0);
 }
 
-// Тест с диапазоном больше максимального элемента
 TEST(RBT_RangeQueryTest, RangeQueryAboveMax) {
     RBTree<int> tree;
     for (int x : {10, 20, 30, 40, 50}) tree.insert(x);
@@ -128,7 +124,6 @@ TEST(RBT_RangeQueryTest, RangeQueryAboveMax) {
     EXPECT_EQ(cnt, 0);
 }
 
-// Тест с диапазоном равным существующему элементу
 TEST(RBT_RangeQueryTest, RangeQuerySingleElement) {
     RBTree<int> tree;
     for (int x : {10, 20, 30, 40, 50}) tree.insert(x);
@@ -137,7 +132,6 @@ TEST(RBT_RangeQueryTest, RangeQuerySingleElement) {
     EXPECT_EQ(cnt, 1);
 }
 
-// Тест с диапазоном из одного элемента, отсутствующего в дереве
 TEST(RBT_RangeQueryTest, RangeQuerySingleAbsentElement) {
     RBTree<int> tree;
     for (int x : {10, 20, 30, 40, 50}) tree.insert(x);
@@ -146,7 +140,6 @@ TEST(RBT_RangeQueryTest, RangeQuerySingleAbsentElement) {
     EXPECT_EQ(cnt, 0);
 }
 
-// Тест с перевернутым диапазоном (fst > snd)
 TEST(RBT_RangeQueryTest, RangeQueryReversedRange) {
     RBTree<int> tree;
     for (int x : {10, 20, 30, 40, 50}) tree.insert(x);
@@ -155,7 +148,6 @@ TEST(RBT_RangeQueryTest, RangeQueryReversedRange) {
     EXPECT_EQ(cnt, 0);
 }
 
-// Тест с дубликатами элементов
 TEST(RBT_RangeQueryTest, RangeQueryWithDuplicates) {
     RBTree<int> tree;
     for (int x : {10, 20, 20, 30, 30, 30, 40, 50}) tree.insert(x);
@@ -164,7 +156,6 @@ TEST(RBT_RangeQueryTest, RangeQueryWithDuplicates) {
     EXPECT_EQ(cnt, 2);
 }
 
-// Тест с диапазоном, включающим все дубликаты одного значения
 TEST(RBT_RangeQueryTest, RangeQuerySingleDuplicateValue) {
     RBTree<int> tree;
     for (int x : {10, 10, 10, 20, 30}) tree.insert(x);
