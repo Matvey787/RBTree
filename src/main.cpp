@@ -52,7 +52,7 @@ int main() try {
         }
         else
         {
-            std::cout << "Input (k) - insert key; (q) - want to query\n";
+            throw std::runtime_error("Input (k) - insert key; (q) - want to query");
         }
     }
     for (size_t i = 0; i < results.size(); ++i)
@@ -97,40 +97,28 @@ catch (const std::exception &e) {
     return EXIT_FAILURE;
 }
 
-template <typename T>
-bool getInput(T& var, const std::string& warningMessage)
-{
-    static std::istringstream iss;
-    static std::string line;
-
-    while (true) {
-        if (!(iss >> var)) {
-            // поток закончился — читаем новую строку
-            if (!std::getline(std::cin, line)) {
-                return false; // EOF
-            }
-            iss.clear();
-            iss.str(line);
-            continue;
+template <typename T> bool getInput(T& var, const std::string& warningMessage)
+{ 
+    size_t attempts = 3;
+    while (true)
+    {
+        std::cin >> std::ws >>  var;
+        if (std::cin.eof())
+        {
+            return false; 
         }
-        return true;
-    }
-}
+        if (std::cin.good()) { break; }
 
-bool getInput(char& var, const std::string& warningMessage)
-{
-    static std::istringstream iss;
-    static std::string line;
+        --attempts;
 
-    while (true) {
-        if (!(iss >> var)) {
-            if (!std::getline(std::cin, line)) {
-                return false; // EOF
-            }
-            iss.clear();
-            iss.str(line);
-            continue;
+        if (attempts == 0)
+        {
+            throw std::runtime_error("Max attempts(3) reached. Exiting...");
         }
-        return true;
+
+        std::cout << "Invalid input! Try again";
+        if (!warningMessage.empty())
+            std::cout << " (" << warningMessage << ")"; std::cout << ":\n";
     }
+    return true;
 }
