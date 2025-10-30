@@ -52,8 +52,8 @@ class RBTree {
 
     void balance    (Node<KeyT> *node);
     void gdumpNode  (std::ofstream &ofs, Node<KeyT> *node) const;
-    void LLRot      (Node<KeyT> *node);
-    void RRRot      (Node<KeyT> *node);
+    void LLRot      (Node<KeyT>& node);
+    void RRRot      (Node<KeyT>& node);
     void BSTErase(const KeyT& key);
     Node<KeyT>* findMinInSubtree(Node<KeyT> *subRoot) const;
 
@@ -61,8 +61,8 @@ public:
     
     using iterator = Node<KeyT>*;
     iterator successor(Node<KeyT>* node) const;
-    iterator lower_bound(KeyT key) const;
-    iterator upper_bound(KeyT key) const;
+    iterator lower_bound(const KeyT& key) const;
+    iterator upper_bound(const KeyT& key) const;
 
     void insert (KeyT key);
     void erase  (KeyT key);
@@ -77,12 +77,12 @@ public:
 };
 
 
-// --------------------------------------- балансировка ---------------------------------------
+// --------------------------------------- balance ---------------------------------------
 
 template <typename KeyT, typename Comp>
-void RBTree<KeyT, Comp>::LLRot(Node<KeyT> *node)
+void RBTree<KeyT, Comp>::LLRot(Node<KeyT>& node)
 {
-    Node<KeyT> *p = node->parent_;
+    Node<KeyT> *p = node.parent_;
     Node<KeyT> *g = p->parent_;
 
     if (g->parent_) {
@@ -107,9 +107,9 @@ void RBTree<KeyT, Comp>::LLRot(Node<KeyT> *node)
 
 
 template <typename KeyT, typename Comp>
-void RBTree<KeyT, Comp>::RRRot(Node<KeyT> *node)
+void RBTree<KeyT, Comp>::RRRot(Node<KeyT>& node)
 {
-    Node<KeyT> *p = node->parent_;
+    Node<KeyT> *p = node.parent_;
     Node<KeyT> *g = p->parent_;
 
     if (g->parent_) {
@@ -148,7 +148,7 @@ void RBTree<KeyT, Comp>::balance(Node<KeyT> *node)
     else
         u = g->right_; // uncle
 
-    if (u && u->color_ == color_t::RED) // случай, если дядя красный
+    if (u && u->color_ == color_t::RED) // if uncle is red
     {
         p->color_ = color_t::BLACK;
         u->color_ = color_t::BLACK;
@@ -161,18 +161,18 @@ void RBTree<KeyT, Comp>::balance(Node<KeyT> *node)
         balance(g);
     }
 
-    else if (!u || u->color_ == color_t::BLACK) // случай, если дядя черный
+    else if (!u || u->color_ == color_t::BLACK) // if uncle is black
     {
-        if ((p == g->left_ && node == p->left_)) // отец левый, сын левый
+        if ((p == g->left_ && node == p->left_)) // father left, son left
         {
-            LLRot(node);
+            LLRot(*node);
         }
-        else if (p == g->right_ && node == p->right_) // отец правый, сын правый
+        else if (p == g->right_ && node == p->right_) // father right, son right
         {
             
-            RRRot(node);
+            RRRot(*node);
         }
-        else if (p == g->left_ && node == p->right_)
+        else if (p == g->left_ && node == p->right_) // father left, son right
         {
             node->parent_ = g;
             g->left_ = node;
@@ -183,9 +183,9 @@ void RBTree<KeyT, Comp>::balance(Node<KeyT> *node)
             p->parent_ = node;
             node->left_ = p;
 
-            LLRot(p);
+            LLRot(*p);
         }
-        else if (p == g->right_ && node == p->left_) // отец правый, сын левый
+        else if (p == g->right_ && node == p->left_) // father right, son left
         {
             node->parent_ = g;
             g->right_ = node;
@@ -196,14 +196,14 @@ void RBTree<KeyT, Comp>::balance(Node<KeyT> *node)
             p->parent_ = node;
             node->right_ = p;
 
-            RRRot(p);
+            RRRot(*p);
         }
     }
 }
 
 
 
-// --------------------------------------- вставка ---------------------------------------
+// --------------------------------------- insert ---------------------------------------
 
 template <typename KeyT, typename Comp>
 void RBTree<KeyT, Comp>::insert(KeyT key)
@@ -243,7 +243,7 @@ void RBTree<KeyT, Comp>::insert(KeyT key)
 
 
 
-// --------------------------------------- удаление ---------------------------------------
+// --------------------------------------- erase ---------------------------------------
 
 template <typename KeyT, typename Comp>
 Node<KeyT>* RBTree<KeyT, Comp>::findMinInSubtree(Node<KeyT> *subRoot) const
@@ -252,8 +252,8 @@ Node<KeyT>* RBTree<KeyT, Comp>::findMinInSubtree(Node<KeyT> *subRoot) const
 
     while (minNode && minNode->left_) minNode = minNode->left_;
 
-    // смотрим что это не корень поддерева,
-    // иначе это означает что левых потомков в этом поддереве нет
+    // check that this is not the root of the subtree,
+    // otherwise it means that there are no left descendants in this subtree
     if (minNode == subRoot) return nullptr;
     return minNode;
 }
@@ -288,7 +288,7 @@ void RBTree<KeyT, Comp>::BSTErase(const KeyT& key)
     };
 
     Node<KeyT> *deleted = top_;
-    while (deleted) // ищем узел для удаления
+    while (deleted) // search node for delition
     {
         if (Comp{}(key, deleted->key_))
             deleted = deleted->left_;
@@ -300,7 +300,7 @@ void RBTree<KeyT, Comp>::BSTErase(const KeyT& key)
 
     if (!deleted) return;
 
-    if(!deleted->left_ && !deleted->right_) // если это лист
+    if(!deleted->left_ && !deleted->right_) // if it's leaf
     {
         if (deleted->parent_->left_ == deleted)
             deleted->parent_->left_ = nullptr;
@@ -313,7 +313,7 @@ void RBTree<KeyT, Comp>::BSTErase(const KeyT& key)
     {
         Node<KeyT> *inorderedSuccessor =  successor(deleted);
 
-        if (!inorderedSuccessor) // минимальный элемент в правом поддереве не найден
+        if (!inorderedSuccessor) // smallest element in the right subtree was not found.
         {
             replace(deleted, deleted->right_);
         }
@@ -322,13 +322,13 @@ void RBTree<KeyT, Comp>::BSTErase(const KeyT& key)
             replace(deleted, inorderedSuccessor);
         }
     }
-    else if (deleted->right_) // есть только правый потомок
+    else if (deleted->right_) // exist only right descendent
     {
         
         replace(deleted, deleted->right_);
         
     }
-    else // есть только левый потомок
+    else // exist only left descendent
     {
         replace(deleted, deleted->left_);
     }
@@ -342,7 +342,7 @@ void RBTree<KeyT, Comp>::erase(KeyT key)
 
 
 
-// --------------------------------------- визуализация ---------------------------------------
+// --------------------------------------- visualization ---------------------------------------
 
 template <typename KeyT, typename Comp>
 void RBTree<KeyT, Comp>::gdump() const
@@ -388,11 +388,11 @@ void RBTree<KeyT, Comp>::gdumpNode(std::ofstream &ofs, Node<KeyT> *node) const
 
 
 
-// --------------------------------------- поиск ---------------------------------------
+// --------------------------------------- searching ---------------------------------------
 
 template <typename KeyT, typename Comp>
 typename RBTree<KeyT, Comp>::iterator 
-RBTree<KeyT, Comp>::lower_bound(KeyT key) const {
+RBTree<KeyT, Comp>::lower_bound(const KeyT& key) const {
     Node<KeyT>* res = nullptr;
     Node<KeyT>* cur = top_;
     while (cur) {
@@ -409,7 +409,7 @@ RBTree<KeyT, Comp>::lower_bound(KeyT key) const {
 
 template <typename KeyT, typename Comp>
 typename RBTree<KeyT, Comp>::iterator 
-RBTree<KeyT, Comp>::upper_bound(KeyT key) const {
+RBTree<KeyT, Comp>::upper_bound(const KeyT& key) const {
     Node<KeyT>* res = nullptr;
     Node<KeyT>* cur = top_;
     while (cur) {
@@ -424,7 +424,7 @@ RBTree<KeyT, Comp>::upper_bound(KeyT key) const {
     return res;
 }
 
-// поиск следующего с более большим ключом
+// search next element after Node<KeyT>* node in subtree
 template <typename KeyT, typename Comp>
 typename RBTree<KeyT, Comp>::iterator
 RBTree<KeyT, Comp>::successor(Node<KeyT>* node) const 
@@ -489,7 +489,7 @@ bool RBTree<KeyT, Comp>::exists(KeyT key) const {
     return false;
 }
 
-// --------------------------------------- линейная очистка ---------------------------------------
+// --------------------------------------- destructor ---------------------------------------
 
 template <typename KeyT, typename Comp>
 void RBTree<KeyT, Comp>::clear()

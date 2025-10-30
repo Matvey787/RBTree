@@ -8,14 +8,12 @@
 #include <iostream>
 #include <vector>
 #include <limits>
+#include <sstream>
 
 template <typename T>
-bool getInput(T* var = nullptr, const std::string& warningMessage = "");
+bool getInput(T& var = nullptr, const std::string& warningMessage = "");
 
-int main()
-{
-    try
-    {
+int main() try {
     #ifdef SET_M
         std::set<int> tree;
     #else
@@ -24,18 +22,18 @@ int main()
 
     std::vector<int> results;
     char command = 0;
-    while (getInput(&command))
+    while (getInput(command))
     {
         if (command == 'k') {
             int key = 0;
-            getInput(&key, "need number");
+            getInput(key, "need number");
             tree.insert(key);
 
         } else if (command == 'q') {
             int key1 = 0;
             int key2 = 0;
-            getInput(&key1, "need number");
-            getInput(&key2, "need number");
+            getInput(key1, "need number");
+            getInput(key2, "need number");
 
             #ifdef SET_M
                 if (key1 > key2)
@@ -62,12 +60,6 @@ int main()
         std::cout << results[i] << (i == results.size() - 1 ? "" : " ");
     }
     std::cout << "\n";
-    }
-
-    catch (const std::exception &e)
-    {
-        std::cerr << "Error: " << e.what() << "\n";
-    }
 
     // tree.insert(10);
     // tree.insert(20);
@@ -100,36 +92,45 @@ int main()
 
     return 0;
 }
+catch (const std::exception &e) {
+    std::cerr << "Error: " << e.what() << "\n";
+    return EXIT_FAILURE;
+}
 
 template <typename T>
-bool getInput(T* var, const std::string& warningMessage)
+bool getInput(T& var, const std::string& warningMessage)
 {
-    if (var) std::cin >> *var;
-    else throw std::invalid_argument("Invalid argument: var is null");
+    static std::istringstream iss;
+    static std::string line;
 
-    size_t attempts = 3;
-    while (!std::cin.good())
-    {
-        --attempts;
-
-        if (attempts == 0)
-        {
-            std::cout << "Max attempts(3) reached. Exiting...\n";
-            std::exit(1);
+    while (true) {
+        if (!(iss >> var)) {
+            // поток закончился — читаем новую строку
+            if (!std::getline(std::cin, line)) {
+                return false; // EOF
+            }
+            iss.clear();
+            iss.str(line);
+            continue;
         }
-        std::cout << "Invalid input! " << "Try again";
-
-        if (!warningMessage.empty()) std::cout << " (" << warningMessage << ")";
-
-        std::cout << ":\n";
-
-        std::cin.clear();
-        std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
-
-        std::cin >> *var;
+        return true;
     }
+}
 
-    std::cin.clear();
-    std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
-    return true;
+bool getInput(char& var, const std::string& warningMessage)
+{
+    static std::istringstream iss;
+    static std::string line;
+
+    while (true) {
+        if (!(iss >> var)) {
+            if (!std::getline(std::cin, line)) {
+                return false; // EOF
+            }
+            iss.clear();
+            iss.str(line);
+            continue;
+        }
+        return true;
+    }
 }
