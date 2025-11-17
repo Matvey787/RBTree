@@ -51,24 +51,27 @@ class RBTree {
     Node<KeyT> *top_ = nullptr;
 
     void balance    (Node<KeyT> *node);
-    void gdumpNode  (std::ofstream &ofs, Node<KeyT> *node) const;
+    void gdumpNode(std::ostream &os, const Node<KeyT> *node) const;
     void LLRot      (Node<KeyT>& node);
     void RRRot      (Node<KeyT>& node);
     void BSTErase(const KeyT& key);
+    Node<KeyT>* successor(Node<KeyT>* node) const;
     Node<KeyT>* findMinInSubtree(Node<KeyT> *subRoot) const;
 
 public:
     
     using iterator = Node<KeyT>*;
-    iterator successor(Node<KeyT>* node) const;
     iterator lower_bound(const KeyT& key) const;
     iterator upper_bound(const KeyT& key) const;
 
-    void insert (KeyT key);
-    void erase  (KeyT key);
-    bool exists (KeyT key) const;
+    void insert (const KeyT& key);
+    void erase  (const KeyT& key);
+    bool exists (const KeyT& key) const;
     void clear  ();
-    void gdump  () const;
+    void gdump(std::ostream &os) const;
+
+    template <typename C>
+    friend int mydistance(const C& tree, typename C::iterator fst, typename C::iterator snd);
 
     ~RBTree()
     {
@@ -79,11 +82,14 @@ public:
 
 // --------------------------------------- balance ---------------------------------------
 
+
 template <typename KeyT, typename Comp>
 void RBTree<KeyT, Comp>::LLRot(Node<KeyT>& node)
 {
     Node<KeyT> *p = node.parent_;
+    if (!p) throw std::runtime_error("LLRot: node has no parent");
     Node<KeyT> *g = p->parent_;
+    if (!g) throw std::runtime_error("LLRot: parent has no grandparent");
 
     if (g->parent_) {
         if (g == g->parent_->left_)
@@ -110,7 +116,9 @@ template <typename KeyT, typename Comp>
 void RBTree<KeyT, Comp>::RRRot(Node<KeyT>& node)
 {
     Node<KeyT> *p = node.parent_;
+    if (!p) throw std::runtime_error("RRRot: node has no parent");
     Node<KeyT> *g = p->parent_;
+    if (!g) throw std::runtime_error("RRRot: parent has no grandparent");
 
     if (g->parent_) {
         if (g == g->parent_->left_)
@@ -135,6 +143,7 @@ void RBTree<KeyT, Comp>::RRRot(Node<KeyT>& node)
 template <typename KeyT, typename Comp>
 void RBTree<KeyT, Comp>::balance(Node<KeyT> *node)
 {
+    if (!node) throw std::runtime_error("balance: node is nullptr");
     Node<KeyT> *p = node->parent_; // parent
     if (!p) return;
     if (p->color_ == color_t::BLACK) return;
@@ -206,7 +215,7 @@ void RBTree<KeyT, Comp>::balance(Node<KeyT> *node)
 // --------------------------------------- insert ---------------------------------------
 
 template <typename KeyT, typename Comp>
-void RBTree<KeyT, Comp>::insert(KeyT key)
+void RBTree<KeyT, Comp>::insert(const KeyT& key)
 {
     if (!top_)
     {
@@ -248,6 +257,8 @@ void RBTree<KeyT, Comp>::insert(KeyT key)
 template <typename KeyT, typename Comp>
 Node<KeyT>* RBTree<KeyT, Comp>::findMinInSubtree(Node<KeyT> *subRoot) const
 {
+    if (!subRoot) return nullptr;
+
     Node<KeyT> *minNode = subRoot;
 
     while (minNode && minNode->left_) minNode = minNode->left_;
@@ -261,9 +272,29 @@ Node<KeyT>* RBTree<KeyT, Comp>::findMinInSubtree(Node<KeyT> *subRoot) const
 template <typename KeyT, typename Comp>
 void RBTree<KeyT, Comp>::BSTErase(const KeyT& key)
 {
-    
     auto replace = [this](Node<KeyT>* oldNode, Node<KeyT>* newNode) {
-        if (!oldNode || !newNode) return;
+        if (!oldNode) return;
+
+        // If newNode is null then we are removing oldNode leaving parent link null
+        if (!newNode)
+        {
+            if (!oldNode->parent_)
+            {
+                top_ = nullptr;
+            }
+            else
+            {
+                if (oldNode->parent_->left_ == oldNode)
+                    oldNode->parent_->left_ = nullptr;
+                else
+                    oldNode->parent_->right_ = nullptr;
+            }
+
+            oldNode->left_ = nullptr;
+            oldNode->right_ = nullptr;
+            delete oldNode;
+            return;
+        }
 
         if (!newNode->left_ && oldNode->left_) newNode->left_ = oldNode->left_;
 
@@ -279,7 +310,6 @@ void RBTree<KeyT, Comp>::BSTErase(const KeyT& key)
             else
             {
                 oldNode->parent_->right_ = newNode;
-                
             }
         }
         oldNode->left_ = nullptr;
@@ -288,7 +318,7 @@ void RBTree<KeyT, Comp>::BSTErase(const KeyT& key)
     };
 
     Node<KeyT> *deleted = top_;
-    while (deleted) // search node for delition
+    while (deleted) // search node for deletion
     {
         if (Comp{}(key, deleted->key_))
             deleted = deleted->left_;
@@ -302,6 +332,13 @@ void RBTree<KeyT, Comp>::BSTErase(const KeyT& key)
 
     if(!deleted->left_ && !deleted->right_) // if it's leaf
     {
+        if (!deleted->parent_)
+        {
+            delete deleted;
+            top_ = nullptr;
+            return;
+        }
+
         if (deleted->parent_->left_ == deleted)
             deleted->parent_->left_ = nullptr;
         else
@@ -324,9 +361,7 @@ void RBTree<KeyT, Comp>::BSTErase(const KeyT& key)
     }
     else if (deleted->right_) // exist only right descendent
     {
-        
         replace(deleted, deleted->right_);
-        
     }
     else // exist only left descendent
     {
@@ -335,53 +370,39 @@ void RBTree<KeyT, Comp>::BSTErase(const KeyT& key)
 }
 
 template <typename KeyT, typename Comp>
-void RBTree<KeyT, Comp>::erase(KeyT key)
+void RBTree<KeyT, Comp>::erase(const KeyT& key)
 {
     BSTErase(key);
 }
 
 
-
 // --------------------------------------- visualization ---------------------------------------
 
 template <typename KeyT, typename Comp>
-void RBTree<KeyT, Comp>::gdump() const
+void RBTree<KeyT, Comp>::gdump(std::ostream &os) const
 {
-    static int counter = 0;
-    std::string graphviz_file = "graphviz/tree" + std::to_string(counter) + ".dot";
-    std::ofstream ofs(graphviz_file);
-    if (!ofs) throw std::runtime_error("Failed to open graphviz_file file");
-    ofs << "digraph G {\n";
-    ofs << "    node [shape=circle, style=filled];\n";
-    gdumpNode(ofs, top_);
-    ofs << "}\n";
-    ofs.close();
-
-    // generate dot file
-    std::string dot_cmd = "dot -Tsvg graphviz/tree" + std::to_string(counter) + ".dot -o graphviz/tree" + std::to_string(counter + 1) + ".svg";
-    system(dot_cmd.c_str());
-    std::string rm_cmd = "rm graphviz/tree" + std::to_string(counter) + ".dot";
-    system(rm_cmd.c_str());
-    ++counter;
+    os << "digraph G {\n";
+    os << "    node [shape=circle, style=filled];\n";
+    gdumpNode(os, top_);
+    os << "}\n";
 }
 
 template <typename KeyT, typename Comp>
-void RBTree<KeyT, Comp>::gdumpNode(std::ofstream &ofs, Node<KeyT> *node) const
+void RBTree<KeyT, Comp>::gdumpNode(std::ostream &os, const Node<KeyT> *node) const
 {
     if (!node) return;
 
-    std::string color_attr = (node->color_ == color_t::RED) ? 
-        "fillcolor=lightcoral, fontcolor=white" : 
-        "fillcolor=lightgray, fontcolor=black";
+    os << "    \"" << node << "\" [label=\"" << node->key_ << "\", "
+       << (node->color_ == color_t::RED ? "fillcolor=lightcoral, fontcolor=white" : "fillcolor=lightgray, fontcolor=black")
+       << "];\n";
 
-    ofs << "    \"" << node << "\" [label=\"" << node->key_ << "\", " << color_attr << "];\n";
     if (node->left_) {
-        ofs << "    \"" << node << "\" -> \"" << node->left_ << "\";\n";
-        gdumpNode(ofs, node->left_);
+        os << "    \"" << node << "\" -> \"" << node->left_ << "\";\n";
+        gdumpNode(os, node->left_);
     }
     if (node->right_) {
-        ofs << "    \"" << node << "\" -> \"" << node->right_ << "\";\n";
-        gdumpNode(ofs, node->right_);
+        os << "    \"" << node << "\" -> \"" << node->right_ << "\";\n";
+        gdumpNode(os, node->right_);
     }
 
 }
@@ -426,8 +447,8 @@ RBTree<KeyT, Comp>::upper_bound(const KeyT& key) const {
 
 // search next element after Node<KeyT>* node in subtree
 template <typename KeyT, typename Comp>
-typename RBTree<KeyT, Comp>::iterator
-RBTree<KeyT, Comp>::successor(Node<KeyT>* node) const 
+Node<KeyT>*
+RBTree<KeyT, Comp>::successor(Node<KeyT>* node) const
 {
     if (!node) return nullptr;
 
@@ -476,7 +497,7 @@ int range_query(const C& s, T fst, T snd)
 }
 
 template <typename KeyT, typename Comp>
-bool RBTree<KeyT, Comp>::exists(KeyT key) const {
+bool RBTree<KeyT, Comp>::exists(const KeyT& key) const {
     Node<KeyT>* cur = top_;
     while (cur) {
         if (cur->key_ == key) return true;
@@ -494,22 +515,34 @@ bool RBTree<KeyT, Comp>::exists(KeyT key) const {
 template <typename KeyT, typename Comp>
 void RBTree<KeyT, Comp>::clear()
 {
-    std::stack<RBTree::iterator> stack;
-    if(top_ != nullptr) stack.push(top_);
-
-    while(!stack.empty())
+    Node<KeyT>* curr = top_;
+    while (curr)
     {
-        RBTree::iterator currNode = stack.top();
-        stack.pop();
+        if (curr->left_)
+        {
+            curr = curr->left_;
+            continue;
+        }
+        if (curr->right_)
+        {
+            curr = curr->right_;
+            continue;
+        }
 
-        if (currNode->left_ != nullptr) stack.push(currNode->left_);
-        if (currNode->right_ != nullptr) stack.push(currNode->right_);
-
-        delete currNode;
+        // leaf node
+        Node<KeyT>* parent = curr->parent_;
+        if (parent)
+        {
+            if (parent->left_ == curr) parent->left_ = nullptr;
+            else parent->right_ = nullptr;
+        }
+        delete curr;
+        if (!parent) { curr = nullptr; top_ = nullptr; }
+        else curr = parent;
     }
 
+    top_ = nullptr;
 }
-
 
 } // namespace RBT
 

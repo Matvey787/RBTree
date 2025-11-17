@@ -30,45 +30,6 @@ TEST(RBT_InsertTest, InsertMaintainsBSTProperty) {
     EXPECT_EQ(root->right()->key(), 15);
 }
 
-TEST(RBT_SuccessorTest, SuccessorWithRightSubtree) {
-    RBTree<int> tree;
-    tree.insert(20);
-    tree.insert(10);
-    tree.insert(30);
-    tree.insert(25);
-
-    auto node20 = tree.lower_bound(20);
-    auto succ = tree.successor(node20);
-
-    ASSERT_NE(succ, nullptr);
-    EXPECT_EQ(succ->key(), 25);
-}
-
-TEST(RBT_SuccessorTest, SuccessorWithoutRightSubtree) {
-    RBTree<int> tree;
-    tree.insert(20);
-    tree.insert(10);
-    tree.insert(30);
-
-    auto node10 = tree.lower_bound(10);
-    auto succ = tree.successor(node10);
-
-    ASSERT_NE(succ, nullptr);
-    EXPECT_EQ(succ->key(), 20);
-}
-
-TEST(RBT_SuccessorTest, MaxElementHasNoSuccessor) {
-    RBTree<int> tree;
-    tree.insert(20);
-    tree.insert(10);
-    tree.insert(30);
-
-    auto node30 = tree.lower_bound(30);
-    auto succ = tree.successor(node30);
-
-    EXPECT_EQ(succ, nullptr);
-}
-
 TEST(RBT_BoundsTest, LowerBoundAndUpperBound) {
     RBTree<int> tree;
     tree.insert(10);
