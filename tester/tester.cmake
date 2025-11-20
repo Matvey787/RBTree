@@ -1,0 +1,8 @@
+option(CTEST OFF "Enable ctest generation")
+if (CTEST)
+    include(tester/tester_config.cmake)
+    add_subdirectory(tester)
+else()
+    include(tester/colors.cmake)
+    print_colored_message("Enable tester CTest by setting -DCTEST=ON", ${Color_Bright_Green}, ${Bg_Default})
+endif()

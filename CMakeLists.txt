@@ -1,11 +1,3 @@
-# cmake -S . -B build && cmake --build build
-
-# ./build/out
-# cmake --build build --target clean
-# ctest --test-dir build -V
-# g++ -g -O2 -fno-omit-frame-pointer your_program.cpp -o your_program
-# -DCMAKE_BUILD_TYPE=RelWithDebInfo
-
 cmake_minimum_required(VERSION 3.11)
 project(LIRS_Cache CXX)
 
@@ -27,47 +19,9 @@ add_executable(generateTest src/generateTest.cpp)
 add_executable(set ${COMMON_SOURCE_FILES})
 target_compile_definitions(set PRIVATE SET_M)
 
-
-
 add_executable(rbt_tests tests/test_rbt.cpp)
 target_link_libraries(rbt_tests GTest::gtest GTest::gtest_main)
 target_include_directories(rbt_tests PRIVATE ${CMAKE_SOURCE_DIR}/inc)
 
-
-# include(CTest)
-# enable_testing()
-
-# function(create_tests_for_target TARGET_NAME FOLDER_WITH_TESTS)
-#     file(GLOB TEST_FILES ${FOLDER_WITH_TESTS}/test*.dat)
-
-#     if(NOT TEST_FILES)
-#         message(WARNING "No test files found.")
-#         return()
-#     endif()
-
-#     foreach(TEST_FILE ${TEST_FILES})
-#         get_filename_component(TEST_NAME ${TEST_FILE} NAME_WE)
-#         string(REGEX REPLACE "^test" "" TEST_NUMBER ${TEST_NAME})
-
-#         set(ANS_FILE ${FOLDER_WITH_TESTS}/ans${TEST_NUMBER}.dat)
-
-#         if(EXISTS ${ANS_FILE})
-#             file(READ ${ANS_FILE} EXPECTED_OUTPUT)
-#             string(STRIP "${EXPECTED_OUTPUT}" EXPECTED_OUTPUT)
-            
-#             add_test(NAME ${TARGET_NAME}_test_${TEST_NUMBER}
-#                 COMMAND bash -c "build/${TARGET_NAME} < ${FOLDER_WITH_TESTS}/test${TEST_NUMBER}.dat"
-#                 WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
-#             )
-            
-#             set_tests_properties(${TARGET_NAME}_test_${TEST_NUMBER} PROPERTIES
-#                 PASS_REGULAR_EXPRESSION "^${EXPECTED_OUTPUT}([ \t\n\r]|$)"
-#             )
-#         else()
-#             message(WARNING "Answer file not found for test ${TEST_NUMBER}: ${ANS_FILE}")
-#         endif()
-#     endforeach()
-# endfunction()
-
-# create_tests_for_target(lirs ${CMAKE_SOURCE_DIR}/tests/lirs)
-# create_tests_for_target(opt ${CMAKE_SOURCE_DIR}/tests/opt)
+include(tester/tester.cmake)
+   

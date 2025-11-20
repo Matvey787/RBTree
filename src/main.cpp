@@ -11,7 +11,7 @@
 #include <sstream>
 
 template <typename T>
-bool getInput(T& var = nullptr, const std::string& warningMessage = "");
+bool getInput(T& var, std::string_view warningMessage = "");
 
 int main() try {
     #ifdef SET_M
@@ -97,10 +97,10 @@ catch (const std::exception &e) {
     return EXIT_FAILURE;
 }
 
-template <typename T> bool getInput(T& var, const std::string& warningMessage)
-{ 
-    size_t attempts = 3;
-    while (true)
+template <typename T> bool getInput(T& var, std::string_view warningMessage)
+{
+    size_t attempt = 0;
+    for (; attempt < 3u; ++attempt)
     {
         std::cin >> std::ws >>  var;
         if (std::cin.eof())
@@ -109,16 +109,14 @@ template <typename T> bool getInput(T& var, const std::string& warningMessage)
         }
         if (std::cin.good()) { break; }
 
-        --attempts;
-
-        if (attempts == 0)
-        {
-            throw std::runtime_error("Max attempts(3) reached. Exiting...");
-        }
-
         std::cout << "Invalid input! Try again";
         if (!warningMessage.empty())
             std::cout << " (" << warningMessage << ")"; std::cout << ":\n";
+        
+        std::cin.clear();
+        std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
     }
+    if (attempt == 3) throw std::runtime_error("Max attempts(3) reached. Exiting...");
+    
     return true;
 }

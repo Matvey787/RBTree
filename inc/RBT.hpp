@@ -11,7 +11,7 @@ namespace RBT {
 enum class color_t { RED, BLACK };
 
 template <typename KeyT>
-struct Node
+struct Node final
 {
 private:
     KeyT key_;
@@ -144,20 +144,20 @@ template <typename KeyT, typename Comp>
 void RBTree<KeyT, Comp>::balance(Node<KeyT> *node)
 {
     if (!node) throw std::runtime_error("balance: node is nullptr");
-    Node<KeyT> *p = node->parent_; // parent
+    Node<KeyT> *p = node->parent_;
     if (!p) return;
     if (p->color_ == color_t::BLACK) return;
 
-    Node<KeyT> *g = p->parent_; // grandparent
+    Node<KeyT> *g = p->parent_;
 
     Node<KeyT> *u = nullptr;
 
     if (g->left_ != p)
-        u = g->left_; // uncle
+        u = g->left_;
     else
-        u = g->right_; // uncle
+        u = g->right_;
 
-    if (u && u->color_ == color_t::RED) // if uncle is red
+    if (u && u->color_ == color_t::RED)
     {
         p->color_ = color_t::BLACK;
         u->color_ = color_t::BLACK;
@@ -170,7 +170,7 @@ void RBTree<KeyT, Comp>::balance(Node<KeyT> *node)
         balance(g);
     }
 
-    else if (!u || u->color_ == color_t::BLACK) // if uncle is black
+    else if (!u || u->color_ == color_t::BLACK)
     {
         if ((p == g->left_ && node == p->left_)) // father left, son left
         {
@@ -275,7 +275,6 @@ void RBTree<KeyT, Comp>::BSTErase(const KeyT& key)
     auto replace = [this](Node<KeyT>* oldNode, Node<KeyT>* newNode) {
         if (!oldNode) return;
 
-        // If newNode is null then we are removing oldNode leaving parent link null
         if (!newNode)
         {
             if (!oldNode->parent_)
@@ -318,7 +317,7 @@ void RBTree<KeyT, Comp>::BSTErase(const KeyT& key)
     };
 
     Node<KeyT> *deleted = top_;
-    while (deleted) // search node for deletion
+    while (deleted)
     {
         if (Comp{}(key, deleted->key_))
             deleted = deleted->left_;
@@ -350,7 +349,7 @@ void RBTree<KeyT, Comp>::BSTErase(const KeyT& key)
     {
         Node<KeyT> *inorderedSuccessor =  successor(deleted);
 
-        if (!inorderedSuccessor) // smallest element in the right subtree was not found.
+        if (!inorderedSuccessor)
         {
             replace(deleted, deleted->right_);
         }
@@ -359,11 +358,11 @@ void RBTree<KeyT, Comp>::BSTErase(const KeyT& key)
             replace(deleted, inorderedSuccessor);
         }
     }
-    else if (deleted->right_) // exist only right descendent
+    else if (deleted->right_) 
     {
         replace(deleted, deleted->right_);
     }
-    else // exist only left descendent
+    else 
     {
         replace(deleted, deleted->left_);
     }
@@ -417,7 +416,7 @@ RBTree<KeyT, Comp>::lower_bound(const KeyT& key) const {
     Node<KeyT>* res = nullptr;
     Node<KeyT>* cur = top_;
     while (cur) {
-        if (!Comp{}(cur->key_, key)) // cur->key_ >= key
+        if (!Comp{}(cur->key_, key))
         { 
             res = cur;
             cur = cur->left_;
@@ -434,7 +433,7 @@ RBTree<KeyT, Comp>::upper_bound(const KeyT& key) const {
     Node<KeyT>* res = nullptr;
     Node<KeyT>* cur = top_;
     while (cur) {
-        if (Comp{}(key, cur->key_)) // cur->key_ > key
+        if (Comp{}(key, cur->key_))
         { 
             res = cur;
             cur = cur->left_;
@@ -490,8 +489,6 @@ int range_query(const C& s, T fst, T snd)
     itt start = s.lower_bound(fst);
     
     itt fin = s.upper_bound(snd);
-
-    // std::cout << "Range query [" << (start ? start->key() : -1) << ", " << (fin ? fin->key() : -1) << "]: " << std::endl;
 
     return mydistance(s, start, fin); // std::distance для set
 }
