@@ -1,10 +1,8 @@
 #ifndef RBT_HPP
 #define RBT_HPP
 
-#include <gtest/gtest.h>
 #include <functional>
 #include <fstream>
-#include <stack>
 
 namespace RBT {
 
@@ -47,7 +45,8 @@ public:
 
 
 template <typename KeyT, typename Comp = std::less<KeyT>>
-class RBTree {
+class RBTree final
+{
     Node<KeyT> *top_ = nullptr;
 
     void balance    (Node<KeyT> *node);
@@ -71,7 +70,7 @@ public:
     void gdump(std::ostream &os) const;
 
     template <typename C>
-    friend int mydistance(const C& tree, typename C::iterator fst, typename C::iterator snd);
+    friend size_t mydistance(const C& tree, typename C::iterator fst, typename C::iterator snd);
 
     ~RBTree()
     {
@@ -469,8 +468,8 @@ RBTree<KeyT, Comp>::successor(Node<KeyT>* node) const
 }
 
 template <typename C>
-int mydistance(const C& tree, typename C::iterator fst, typename C::iterator snd) {
-    int cnt = 0;
+size_t mydistance(const C& tree, typename C::iterator fst, typename C::iterator snd) {
+    size_t cnt = 0;
     auto cur = fst;
     while (cur && cur != snd)
     {
@@ -481,7 +480,7 @@ int mydistance(const C& tree, typename C::iterator fst, typename C::iterator snd
 }
 
 template <typename C, typename T>
-int range_query(const C& s, T fst, T snd)
+size_t range_query(const C& s, T fst, T snd)
 {
     if (fst > snd) return 0;
 

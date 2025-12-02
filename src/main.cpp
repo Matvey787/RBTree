@@ -59,41 +59,12 @@ int main() try {
     {
         std::cout << results[i] << (i == results.size() - 1 ? "" : " ");
     }
-    std::cout << "\n";
-
-    // tree.insert(10);
-    // tree.insert(20);
-    // tree.gdump();
-    // tree.insert(30);
-    // tree.gdump();
-    // tree.insert(45);
-    // tree.gdump();
-    // tree.insert(8);
-    // tree.insert(40);
-    // tree.insert(100);
-    // tree.insert(12);
-    // tree.insert(15);
-    // tree.insert(25);
-    // tree.insert(1000);
-    // tree.insert(10000);
-    // tree.gdump();
-    // 
-    // tree.gdump();
-    // tree.insert(45);
-    // tree.gdump();
-    // tree.insert(10);
-    // tree.gdump();
-    // tree.insert(5);
-    // tree.gdump();
-    // FIXME НЕ ВЫЗЫВАЙТЕ УДАЛЕНИЕ, ОНО РАБОТАЕТ БЕЗ БАЛАНСИРОВКИ, ЭТО УДАЛЕНИЕ В SBT, А НЕ В 
-    // RBT !!!!!
-    // // tree.erase(30); 
-    // tree.gdump();
+    std::cout << '\n';
 
     return 0;
 }
 catch (const std::exception &e) {
-    std::cerr << "Error: " << e.what() << "\n";
+    std::cerr << "Error: " << e.what() << '\n';
     return EXIT_FAILURE;
 }
 

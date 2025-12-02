@@ -1,27 +1,39 @@
 cmake_minimum_required(VERSION 3.11)
-project(LIRS_Cache CXX)
+project(RedBlackTree CXX)
 
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 find_package(GTest REQUIRED)
 
-include_directories(${CMAKE_SOURCE_DIR}/inc)
+# -------------------- Red-Black Tree library --------------------
+set(RBT_LIB rbt INTERFACE)
+add_library(${RBT_LIB})
 
-set(COMMON_SOURCE_FILES
+target_include_directories(${RBT_LIB} INTERFACE ${CMAKE_SOURCE_DIR}/RBT_Lib/inc)
+    
+# -----------------------------------------------------------------
+
+# -------------------- My RBTree Exec --------------------
+add_executable(out 
     src/main.cpp
 )
 
-add_executable(out ${COMMON_SOURCE_FILES})
-target_include_directories(out PRIVATE ${CMAKE_SOURCE_DIR}/inc)
+target_link_libraries(out 
+    PRIVATE
+        ${RBT_LIB}
+)
+# --------------------------------------------------------
 
-add_executable(generateTest src/generateTest.cpp)
+# -------------------- std::set --------------------
+add_executable(set
+    src/main.cpp
+)
 
-add_executable(set ${COMMON_SOURCE_FILES})
-target_compile_definitions(set PRIVATE SET_M)
+target_compile_definitions(set
+    PRIVATE
+    SET_M
+)
+# --------------------------------------------------
 
-add_executable(rbt_tests tests/test_rbt.cpp)
-target_link_libraries(rbt_tests GTest::gtest GTest::gtest_main)
-target_include_directories(rbt_tests PRIVATE ${CMAKE_SOURCE_DIR}/inc)
-
-include(tester/tester.cmake)
+add_subdirectory(tester)
    
